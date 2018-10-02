@@ -10,17 +10,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="google-site-verification" content="BEd2YAbpSQrRqU2-5wUifTTzvqTMGLLE269b0JZTfCs" />
 
-    <title>Using Redirects | Webapps for Beginners</title>
+    <title>Writing resources | Webapps for Beginners</title>
 
     <link href="../assets/stylesheets/monstas-4fb1ecb5.css" rel="stylesheet" type="text/css" />
     <link rel="icon" type="image/png" href="/assets/images/favicon-870787d6.png" />
   </head>
 
   <body>
-    <nav class="page-nav"><a class="prev" href="/storing_data/using_post.html">
+    <nav class="page-nav"><a class="prev" href="/resources/fake_methods.html">
   Previous
 </a></nav>
-    <nav class="page-nav"><a class="next" href="/sessions.html">
+    <nav class="page-nav"><a class="next" href="/databases.html">
   Next
 </a></nav>
 
@@ -193,7 +193,7 @@
       </li>
     </ul>
   </li>
-  <li class="directory expanded">
+  <li class="directory">
     <a href="/storing_data.html">
       Storing data
     </a>
@@ -218,7 +218,7 @@
           Using POST
         </a>
       </li>
-      <li class="active">
+      <li>
         <a href="/storing_data/redirect.html">
           Using Redirects
         </a>
@@ -247,7 +247,7 @@
       Validations
     </a>
   </li>
-  <li class="directory">
+  <li class="directory expanded">
     <a href="/resources.html">
       Resources
     </a>
@@ -262,7 +262,7 @@
           Faking HTTP verbs
         </a>
       </li>
-      <li>
+      <li class="active">
         <a href="/resources/writing_resources.html">
           Writing resources
         </a>
@@ -364,59 +364,24 @@
       </nav>
       <article>
         <nav class="menu"><a href="#"></a></nav>
-        <h1>Using Redirects</h1>
+        <h1>Writing resources</h1>
 
-<p>After handling a <code>POST</code> (or <code>PUT</code> or <code>DELETE</code>) request, in today&rsquo;s web
-applications it is common to redirect the browser to the page that displays the
-changed state:</p>
+<p>Writing web applications can be defined as implementing such resources.</p>
 
-<p>Our application would respond: <em>&ldquo;Alright, I&rsquo;ve done this! Go here, check it out!&rdquo;</em></p>
+<p>Rails helps a lot with the boilerplate code, code that has to be written over
+and over again, when you define a lot of resources for your web application.</p>
 
-<p>The way of expressing this in terms of HTTP is returning the status code <code>303
-See Other</code>, and adding a <code>location</code> header to the response that tells the
-browser where to go (what to <code>GET</code>) next.</p>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">303</span> <span class="ne">See Other</span>
-<span class="na">Location</span><span class="p">:</span> <span class="s">http://localhost:4567/monstas</span>
-</code></pre>
+<p>However, in this course, we&rsquo;ll want to implement our <code>members</code> resource
+ourselves, and do all the legwork that is required.</p>
 
-<p>Hmm, ok. But how do we achieve that in Sinatra?</p>
+<p>So how about heading over to the exercise <a href="http://localhost:4567/exercises/sinatra_resource.html">Sinatra Resource</a>.</p>
 
-<p>Remember Sinatra calls itself a DSL? It has a method <code>redirect</code> for that:</p>
-<pre class="highlight ruby"><code><span class="n">post</span> <span class="s2">"/monstas"</span> <span class="k">do</span>
-  <span class="vi">@name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="ss">:name</span><span class="p">]</span>
-  <span class="n">store_name</span><span class="p">(</span><span class="s2">"names.txt"</span><span class="p">,</span> <span class="vi">@name</span><span class="p">)</span>
-  <span class="n">redirect</span> <span class="s2">"/monstas"</span>
-<span class="k">end</span>
-</code></pre>
+<p>Give it a shot!</p>
 
-<p>The <code>redirect</code> method will make sure our application responds with the status
-code <code>303</code> and add a <code>location</code> header to the response with the value
-<code>http://localhost:4567/monstas</code> (since we have passed the path <code>/monstas</code>, but the
-<code>location</code> header needs a full URL).</p>
-
-<p>We also want to see the the Welcome message when we post a new name. For that to
-work, we can redirect to <code>&quot;/monstas?name=#{@name}&quot;</code>. Our <code>GET</code> route will then
-include (&ldquo;render&rdquo;) the name into the HTML page:</p>
-<pre class="highlight ruby"><code><span class="n">post</span> <span class="s2">"/monstas"</span> <span class="k">do</span>
-  <span class="vi">@name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="ss">:name</span><span class="p">]</span>
-  <span class="n">store_name</span><span class="p">(</span><span class="s2">"names.txt"</span><span class="p">,</span> <span class="vi">@name</span><span class="p">)</span>
-  <span class="n">redirect</span> <span class="s2">"/monstas?name=</span><span class="si">#{</span><span class="vi">@name</span><span class="si">}</span><span class="s2">"</span>
-<span class="k">end</span>
-</code></pre>
-
-<p>If you restart the server, go to <a href="http://localhost:4567/monstas"><a href="http://localhost:4567/monstas">http://localhost:4567/monstas</a></a>,
-and submit the form you&rsquo;ll see that your browser will be redirected, and make
-a new <code>GET</code> request to the same URL.</p>
-
-<p>So this is pretty cool. We now have two routes: One for displaying (<code>GET</code>ing)
-the current state of our application, and one for storing (<code>POST</code>ing) new data.</p>
-
-<p>Awesome!</p>
-
-        <nav class="page-nav"><a class="prev" href="/storing_data/using_post.html">
+        <nav class="page-nav"><a class="prev" href="/resources/fake_methods.html">
   Previous
 </a></nav>
-        <nav class="page-nav"><a class="next" href="/sessions.html">
+        <nav class="page-nav"><a class="next" href="/databases.html">
   Next
 </a></nav>
       </article>

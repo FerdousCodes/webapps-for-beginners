@@ -10,17 +10,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="google-site-verification" content="BEd2YAbpSQrRqU2-5wUifTTzvqTMGLLE269b0JZTfCs" />
 
-    <title>Using Redirects | Webapps for Beginners</title>
+    <title>Incremental Changes | Webapps for Beginners</title>
 
     <link href="../assets/stylesheets/monstas-4fb1ecb5.css" rel="stylesheet" type="text/css" />
     <link rel="icon" type="image/png" href="/assets/images/favicon-870787d6.png" />
   </head>
 
   <body>
-    <nav class="page-nav"><a class="prev" href="/storing_data/using_post.html">
+    <nav class="page-nav"><a class="prev" href="/migrations/database_structure.html">
   Previous
 </a></nav>
-    <nav class="page-nav"><a class="next" href="/sessions.html">
+    <nav class="page-nav"><a class="next" href="/migrations/rollbacks.html">
   Next
 </a></nav>
 
@@ -193,7 +193,7 @@
       </li>
     </ul>
   </li>
-  <li class="directory expanded">
+  <li class="directory">
     <a href="/storing_data.html">
       Storing data
     </a>
@@ -218,7 +218,7 @@
           Using POST
         </a>
       </li>
-      <li class="active">
+      <li>
         <a href="/storing_data/redirect.html">
           Using Redirects
         </a>
@@ -296,7 +296,7 @@
       </li>
     </ul>
   </li>
-  <li class="directory">
+  <li class="directory expanded">
     <a href="/migrations.html">
       Migrations
     </a>
@@ -306,7 +306,7 @@
           Database Structure
         </a>
       </li>
-      <li>
+      <li class="active">
         <a href="/migrations/incremental_changes.html">
           Incremental Changes
         </a>
@@ -364,59 +364,45 @@
       </nav>
       <article>
         <nav class="menu"><a href="#"></a></nav>
-        <h1>Using Redirects</h1>
+        <h2>Incremental changes</h2>
 
-<p>After handling a <code>POST</code> (or <code>PUT</code> or <code>DELETE</code>) request, in today&rsquo;s web
-applications it is common to redirect the browser to the page that displays the
-changed state:</p>
+<p>Instead of sharing the final database structure, as defined in our <code>schema.sql</code>
+file, we would share many files where each of them defines a single change to
+our database structure. We also somehow number these files so we can run each
+change one after another in the precise same order.</p>
 
-<p>Our application would respond: <em>&ldquo;Alright, I&rsquo;ve done this! Go here, check it out!&rdquo;</em></p>
-
-<p>The way of expressing this in terms of HTTP is returning the status code <code>303
-See Other</code>, and adding a <code>location</code> header to the response that tells the
-browser where to go (what to <code>GET</code>) next.</p>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">303</span> <span class="ne">See Other</span>
-<span class="na">Location</span><span class="p">:</span> <span class="s">http://localhost:4567/monstas</span>
+<p>Imagine our first step is to define the table members. So &ldquo;change 1&rdquo; would
+contain our SQL code from above. We&rsquo;d store this in a file <code>db-change-1.sql</code>:</p>
+<pre class="highlight plaintext"><code>CREATE TABLE members (id INTEGER PRIMARY KEY, name VARCHAR(255), joined_on DATE);
 </code></pre>
 
-<p>Hmm, ok. But how do we achieve that in Sinatra?</p>
-
-<p>Remember Sinatra calls itself a DSL? It has a method <code>redirect</code> for that:</p>
-<pre class="highlight ruby"><code><span class="n">post</span> <span class="s2">"/monstas"</span> <span class="k">do</span>
-  <span class="vi">@name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="ss">:name</span><span class="p">]</span>
-  <span class="n">store_name</span><span class="p">(</span><span class="s2">"names.txt"</span><span class="p">,</span> <span class="vi">@name</span><span class="p">)</span>
-  <span class="n">redirect</span> <span class="s2">"/monstas"</span>
-<span class="k">end</span>
+<p>Now, the next person adds another change to the database structure, which adds
+the table <code>messages</code> from our example above. They store this in a file
+<code>db-change-2.sql</code>:</p>
+<pre class="highlight plaintext"><code>CREATE TABLE messages (id INTEGER PRIMARY KEY, member_id INTEGER, message TEXT);
 </code></pre>
 
-<p>The <code>redirect</code> method will make sure our application responds with the status
-code <code>303</code> and add a <code>location</code> header to the response with the value
-<code>http://localhost:4567/monstas</code> (since we have passed the path <code>/monstas</code>, but the
-<code>location</code> header needs a full URL).</p>
-
-<p>We also want to see the the Welcome message when we post a new name. For that to
-work, we can redirect to <code>&quot;/monstas?name=#{@name}&quot;</code>. Our <code>GET</code> route will then
-include (&ldquo;render&rdquo;) the name into the HTML page:</p>
-<pre class="highlight ruby"><code><span class="n">post</span> <span class="s2">"/monstas"</span> <span class="k">do</span>
-  <span class="vi">@name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="ss">:name</span><span class="p">]</span>
-  <span class="n">store_name</span><span class="p">(</span><span class="s2">"names.txt"</span><span class="p">,</span> <span class="vi">@name</span><span class="p">)</span>
-  <span class="n">redirect</span> <span class="s2">"/monstas?name=</span><span class="si">#{</span><span class="vi">@name</span><span class="si">}</span><span class="s2">"</span>
-<span class="k">end</span>
+<p>And then, a couple days later, another person figures we should also keep track
+of a timestamp which tells us when a message has been sent. We store this change
+in a file <code>db-change-3.sql</code></p>
+<pre class="highlight plaintext"><code>ALTER TABLE messages ADD COLUMN sent_at DATETIME;
 </code></pre>
 
-<p>If you restart the server, go to <a href="http://localhost:4567/monstas"><a href="http://localhost:4567/monstas">http://localhost:4567/monstas</a></a>,
-and submit the form you&rsquo;ll see that your browser will be redirected, and make
-a new <code>GET</code> request to the same URL.</p>
+<p>Now we have 3 changes, stored in 3 separate files. We also know the order in
+which these changes have been created: we can defer this from their filenames.
+If we keep track of changes that we already have applied to our database
+structure, then we can easily run the ones our collaborators have added just
+recently, and continue working on our code.</p>
 
-<p>So this is pretty cool. We now have two routes: One for displaying (<code>GET</code>ing)
-the current state of our application, and one for storing (<code>POST</code>ing) new data.</p>
+<p>This concept is called <em>database migrations</em>: We migrate the database structure
+from one state to the next one, by applying one change after another.</p>
 
-<p>Awesome!</p>
+<p>Sounds useful?</p>
 
-        <nav class="page-nav"><a class="prev" href="/storing_data/using_post.html">
+        <nav class="page-nav"><a class="prev" href="/migrations/database_structure.html">
   Previous
 </a></nav>
-        <nav class="page-nav"><a class="next" href="/sessions.html">
+        <nav class="page-nav"><a class="next" href="/migrations/rollbacks.html">
   Next
 </a></nav>
       </article>

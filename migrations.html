@@ -10,17 +10,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="google-site-verification" content="BEd2YAbpSQrRqU2-5wUifTTzvqTMGLLE269b0JZTfCs" />
 
-    <title>Using Redirects | Webapps for Beginners</title>
+    <title>Migrations | Webapps for Beginners</title>
 
-    <link href="../assets/stylesheets/monstas-4fb1ecb5.css" rel="stylesheet" type="text/css" />
+    <link href="assets/stylesheets/monstas-4fb1ecb5.css" rel="stylesheet" type="text/css" />
     <link rel="icon" type="image/png" href="/assets/images/favicon-870787d6.png" />
   </head>
 
   <body>
-    <nav class="page-nav"><a class="prev" href="/storing_data/using_post.html">
+    <nav class="page-nav"><a class="prev" href="/databases/orm.html">
   Previous
 </a></nav>
-    <nav class="page-nav"><a class="next" href="/sessions.html">
+    <nav class="page-nav"><a class="next" href="/migrations/database_structure.html">
   Next
 </a></nav>
 
@@ -193,7 +193,7 @@
       </li>
     </ul>
   </li>
-  <li class="directory expanded">
+  <li class="directory">
     <a href="/storing_data.html">
       Storing data
     </a>
@@ -218,7 +218,7 @@
           Using POST
         </a>
       </li>
-      <li class="active">
+      <li>
         <a href="/storing_data/redirect.html">
           Using Redirects
         </a>
@@ -296,7 +296,7 @@
       </li>
     </ul>
   </li>
-  <li class="directory">
+  <li class="active directory expanded">
     <a href="/migrations.html">
       Migrations
     </a>
@@ -364,59 +364,59 @@
       </nav>
       <article>
         <nav class="menu"><a href="#"></a></nav>
-        <h1>Using Redirects</h1>
+        <h1>Migrations</h1>
 
-<p>After handling a <code>POST</code> (or <code>PUT</code> or <code>DELETE</code>) request, in today&rsquo;s web
-applications it is common to redirect the browser to the page that displays the
-changed state:</p>
+<p><em>Persist executable changes to the database structure</em></p>
 
-<p>Our application would respond: <em>&ldquo;Alright, I&rsquo;ve done this! Go here, check it out!&rdquo;</em></p>
+<p>In programming, when we store something to a medium that survives when the
+program terminates (or when the computer is shut down, and rebooted), we use
+the term <a href="http://en.wikipedia.org/wiki/Persistence_(computer_science)">persistence</a>
+for that.</p>
 
-<p>The way of expressing this in terms of HTTP is returning the status code <code>303
-See Other</code>, and adding a <code>location</code> header to the response that tells the
-browser where to go (what to <code>GET</code>) next.</p>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">303</span> <span class="ne">See Other</span>
-<span class="na">Location</span><span class="p">:</span> <span class="s">http://localhost:4567/monstas</span>
+<p>Databases are probably the most common way to persist data in webapplications.
+Your web application would read data from the database, and store data to it.
+E.g. our application could read members, and store them. We use the term
+<em>runtime</em> for this: Our application does all of this &ldquo;at runtime&rdquo;, meaning:
+after it has been started, and while it is running.</p>
+
+<p>This data is stored as rows in our database tables. What about the structure
+though?</p>
+
+<p>The database structure normally does not change at runtime. The users of
+your application do not get to add more columns to the <code>members</code> table,
+right? That&rsquo;s something you, as a developer, want to define, basically
+while you write your code.</p>
+
+<p>So even though the database structure itself is not exactly part of your code,
+it highly relates to your code: Your Ruby code makes assumptions about what
+tables exist, and what columns each of the tables has. In other words, your
+code would not work unless the database has a certain structure.</p>
+
+<p>E.g. this Ruby code from our previous example makes the assumption that there
+is a table <code>members</code> and it has at least the columns <code>id</code>, <code>name</code>, and
+<code>joined_on</code>:</p>
+<pre class="highlight ruby"><code><span class="n">member</span> <span class="o">=</span> <span class="no">Member</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="ss">id: </span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="n">member</span><span class="p">.</span><span class="nf">name</span><span class="si">}</span><span class="s2"> has joined on </span><span class="si">#{</span><span class="n">member</span><span class="p">.</span><span class="nf">joined_on</span><span class="si">}</span><span class="s2">."</span>
 </code></pre>
 
-<p>Hmm, ok. But how do we achieve that in Sinatra?</p>
+<p>Because defining the database structure is a task that is separate from running
+the actual application (starting your web server), there usually is some tool
+to create a database, and apply the exact structure that your application (Ruby
+code) requires.</p>
 
-<p>Remember Sinatra calls itself a DSL? It has a method <code>redirect</code> for that:</p>
-<pre class="highlight ruby"><code><span class="n">post</span> <span class="s2">"/monstas"</span> <span class="k">do</span>
-  <span class="vi">@name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="ss">:name</span><span class="p">]</span>
-  <span class="n">store_name</span><span class="p">(</span><span class="s2">"names.txt"</span><span class="p">,</span> <span class="vi">@name</span><span class="p">)</span>
-  <span class="n">redirect</span> <span class="s2">"/monstas"</span>
-<span class="k">end</span>
-</code></pre>
+<p>One could, of course, create the database, and its structure manually, just
+like you&rsquo;ve just defined a table in the interactive SQLite shell.  However that
+obviously is tedious, makes it difficult to collaborate with others, and
+install your application in different environments: People would have to create
+the database manually over and over, so that&rsquo;s not really a practical option.</p>
 
-<p>The <code>redirect</code> method will make sure our application responds with the status
-code <code>303</code> and add a <code>location</code> header to the response with the value
-<code>http://localhost:4567/monstas</code> (since we have passed the path <code>/monstas</code>, but the
-<code>location</code> header needs a full URL).</p>
+<p>Instead web applications use a concept called &ldquo;database migrations&rdquo;, and we&rsquo;ll
+explore it here because it&rsquo;s going to be a big topid in Rails, too.</p>
 
-<p>We also want to see the the Welcome message when we post a new name. For that to
-work, we can redirect to <code>&quot;/monstas?name=#{@name}&quot;</code>. Our <code>GET</code> route will then
-include (&ldquo;render&rdquo;) the name into the HTML page:</p>
-<pre class="highlight ruby"><code><span class="n">post</span> <span class="s2">"/monstas"</span> <span class="k">do</span>
-  <span class="vi">@name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="ss">:name</span><span class="p">]</span>
-  <span class="n">store_name</span><span class="p">(</span><span class="s2">"names.txt"</span><span class="p">,</span> <span class="vi">@name</span><span class="p">)</span>
-  <span class="n">redirect</span> <span class="s2">"/monstas?name=</span><span class="si">#{</span><span class="vi">@name</span><span class="si">}</span><span class="s2">"</span>
-<span class="k">end</span>
-</code></pre>
-
-<p>If you restart the server, go to <a href="http://localhost:4567/monstas"><a href="http://localhost:4567/monstas">http://localhost:4567/monstas</a></a>,
-and submit the form you&rsquo;ll see that your browser will be redirected, and make
-a new <code>GET</code> request to the same URL.</p>
-
-<p>So this is pretty cool. We now have two routes: One for displaying (<code>GET</code>ing)
-the current state of our application, and one for storing (<code>POST</code>ing) new data.</p>
-
-<p>Awesome!</p>
-
-        <nav class="page-nav"><a class="prev" href="/storing_data/using_post.html">
+        <nav class="page-nav"><a class="prev" href="/databases/orm.html">
   Previous
 </a></nav>
-        <nav class="page-nav"><a class="next" href="/sessions.html">
+        <nav class="page-nav"><a class="next" href="/migrations/database_structure.html">
   Next
 </a></nav>
       </article>
@@ -436,7 +436,7 @@ the current state of our application, and one for storing (<code>POST</code>ing)
       </ul>
     </footer>
 
-    <script src="../assets/javascripts/modernizr-4c875d94.js" type="text/javascript"></script>
-    <script src="../assets/javascripts/monstas-e84d6217.js" type="text/javascript"></script>
+    <script src="assets/javascripts/modernizr-4c875d94.js" type="text/javascript"></script>
+    <script src="assets/javascripts/monstas-e84d6217.js" type="text/javascript"></script>
   </body>
 </html>
